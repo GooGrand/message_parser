@@ -1,8 +1,5 @@
 import configparser
-import json
-from utils.DatetimeEncoder import DateTimeEncoder
-from utils.date_utils import count_offset
-from utils.message_utils import count_replies
+from utils.utils import count_offset, count_replies
 from telethon.tl.functions.messages import (GetHistoryRequest)
 from telethon import TelegramClient
 
@@ -71,6 +68,7 @@ async def main():
                            'year': year}, offset_per_day)
     print('Offset is - '+str(offset))
     await collect_messages(client, my_channel, offset)
+
 
 with client:
 	client.loop.run_until_complete(main())

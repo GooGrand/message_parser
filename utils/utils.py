@@ -1,6 +1,5 @@
 from datetime import datetime
 
-
 def count_offset(date, offset_per_day):
     date = prepare_date(date)
     days_amount = datetime.now() - datetime(int(date['year']), int(date['month']), int(date['day']))
@@ -19,5 +18,12 @@ def prepare_date(date):
     return date
 
 
-def save_data(date, offset):
-    pass
+def count_replies(messages):
+    replies = {}
+    for message in messages:
+        print(message)
+        if 'replies' in message and message['replies'] and message['replies']['replies'] > 2:
+            id = message['id']
+            reply = message['replies']
+            replies[id] = reply['replies']
+    return replies
