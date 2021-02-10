@@ -41,7 +41,7 @@ async def collect_messages(client, my_channel, count_limit):
         print("Current Offset ID is:", offset_id, "; Total Messages:", total_messages)
         history = await client(GetHistoryRequest(
             peer=my_channel,
-            offset_id=0,
+            offset_id=offset_id,
             offset_date=0,
             add_offset=0,
             limit=limit,
@@ -60,8 +60,11 @@ async def collect_messages(client, my_channel, count_limit):
             break
 
     result = count_replies(all_messages)
-    # with open('channel_messages.json', 'w', encoding='utf8') as outfile:
-    #     json.dump(all_messages, outfile, ensure_ascii=False, cls=DateTimeEncoder)
+    sorted_result = sorted(result, key=result.get, reverse=True)
+    with open('most_popular_messages.txt', 'a', encoding='utf8') as outfile:
+        for key in sorted_result[:10]:
+            item = result[key]
+            outfile.writelines('https://t.me/lobsters_chat/'+str(key)+' with result - '+str(item)+'\n')
 
 
 async def main():
@@ -69,9 +72,10 @@ async def main():
     day = input("Введите день (e.g. 9, 15): ")
     month = input("Введите месяц (e.g. 5, 12): ")
     year = input("Введите год: ")
-    offset = count_offset({day: day,
-                           month: month,
-                           year: year}, offset_per_day)
+    offset = count_offset({'day': day,
+                           'month': month,
+                           'year': year}, offset_per_day)
+    print('Offset is - '+str(offset))
     await collect_messages(client, my_channel, offset)
 
 with client:
