@@ -24,12 +24,6 @@ offset_per_day = config['Telegram']['offset_per_day']
 client = TelegramClient(username, api_id, api_hash)
 client.start()
 print("Client Created")
-# if not await client.is_user_authorized():
-#     client.send_code_request(phone)
-#     try:
-#         client.sign_in(phone, input('Enter the code: '))
-#     except SessionPasswordNeededError:
-#         client.sign_in(password=input('Password: '))
 
 
 async def collect_messages(client, my_channel, count_limit):
