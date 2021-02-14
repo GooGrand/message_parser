@@ -1,5 +1,7 @@
 import configparser
-from utils.utils import count_offset, count_replies
+import time
+import sys
+from utils.utils import count_replies
 from telethon.tl.functions.messages import (GetHistoryRequest)
 from telethon import TelegramClient
 
@@ -15,7 +17,7 @@ api_hash = str(api_hash)
 phone = config['Telegram']['phone']
 username = config['Telegram']['username']
 chat_id = config['Telegram']['chat_id']
-offset_per_day = config['Telegram']['offset_per_day']
+offset_per_day = int(config['Telegram']['offset_per_day'])
 
 
 client = TelegramClient(username, api_id, api_hash)
@@ -44,30 +46,40 @@ async def collect_messages(client, my_channel, count_limit):
             break
         messages = history.messages
         for message in messages:
+
             all_messages.append(message.to_dict())
         offset_id = messages[len(messages) - 1].id
         total_messages = len(all_messages)
         if count_limit != 0 and total_messages >= count_limit:
             break
 
-    result = count_replies(all_messages)
-    sorted_result = sorted(result, key=result.get, reverse=True)
-    with open('most_popular_messages.txt', 'a', encoding='utf8') as outfile:
-        for key in sorted_result[:10]:
-            item = result[key]
-            outfile.writelines('https://t.me/lobsters_chat/'+str(key)+' with result - '+str(item)+'\n')
+    replies, forwards = count_replies(all_messages)
+    replies_sorted = sorted(replies, key=replies.get, reverse=True)
+    forwards_sorted = sorted(forwards, key=forwards.get, reverse=True)
+    message_result = 'Hey! Daily summary has come. Check it out! \n Most replied messages: \n'
+    for key in replies_sorted[:10]:
+        item = replies[key]
+        message_result += 'https://t.me/lobsters_chat/' + str(key) + ' with result - ' + str(item) + ' replies \n'
+    if forwards_sorted:
+        message_result += 'Most forwarded messages: \n'
+    for key in forwards_sorted[:10]:
+        item = forwards[key]
+        message_result += 'https://t.me/lobsters_chat/' + str(key) + ' with result - ' + str(item) + ' forwards \n '
+    print(message_result)
+    receiver = await client.get_input_entity('lobster_watcher')
+
+    try:
+        print("Sending Message... ")
+        await client.send_message(receiver, message_result)
+    except Exception as e:
+        print(e)
+        client.disconnect()
+        sys.exit()
 
 
 async def main():
     my_channel = await client.get_entity(chat_id)
-    day = input("Введите день (e.g. 9, 15): ")
-    month = input("Введите месяц (e.g. 5, 12): ")
-    year = input("Введите год: ")
-    offset = count_offset({'day': day,
-                           'month': month,
-                           'year': year}, offset_per_day)
-    print('Offset is - '+str(offset))
-    await collect_messages(client, my_channel, offset)
+    await collect_messages(client, my_channel, offset_per_day)
 
 
 with client:
