@@ -32,13 +32,3 @@ def count_replies(messages):
             forwards[id] = message['forwards']
     return replies, forwards
 
-
-async def generate_message(sorted, main, type, message):
-    if type == 'replies':
-        message += 'Most replied messages: \n'
-    elif type == 'forwards':
-        message += 'Most forwarded messages: \n'
-    for key in sorted[:10]:
-        item = main[key]
-        message += 'https://t.me/lobsters_chat/' + str(key) + ' with result - ' + str(item) + ' ' + str(type) +' \n'
-    return message

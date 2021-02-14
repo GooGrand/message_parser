@@ -1,7 +1,7 @@
 import configparser
 import time
 import sys
-from utils.utils import count_offset, count_replies, generate_message
+from utils.utils import count_offset, count_replies
 from telethon.tl.functions.messages import (GetHistoryRequest)
 from telethon import TelegramClient
 
@@ -56,12 +56,18 @@ async def collect_messages(client, my_channel, count_limit):
     replies, forwards = count_replies(all_messages)
     replies_sorted = sorted(replies, key=replies.get, reverse=True)
     forwards_sorted = sorted(forwards, key=forwards.get, reverse=True)
-    message_result = 'Hey! Daily summary has come. Check it out! \n '
-    message_result += await generate_message(replies_sorted, replies, 'replies', message_result)
-    message_result += await generate_message(forwards_sorted, forwards, 'forwards', message_result)
-    print(replies)
-    print(forwards)
+    message_result = 'Hey! Daily summary has come. Check it out! \n Most replied messages: \n'
+    for key in replies_sorted[:10]:
+        item = replies[key]
+        message_result += 'https://t.me/lobsters_chat/' + str(key) + ' with result - ' + str(item) + ' replies \n'
+    if forwards_sorted:
+        message_result += 'Most forwarded messages: \n'
+    for key in forwards_sorted[:10]:
+        item = forwards[key]
+        message_result += 'https://t.me/lobsters_chat/' + str(key) + ' with result - ' + str(item) + ' forwards \n '
+    print(message_result)
     receiver = await client.get_input_entity('lobster_watcher')
+
     try:
         print("Sending Message... ")
         await client.send_message(receiver, message_result)
@@ -81,7 +87,6 @@ async def main():
                            'year': year}, offset_per_day)
     print('Offset is - '+str(offset))
     await collect_messages(client, my_channel, offset)
-    client.disconnect()
 
 
 with client:
