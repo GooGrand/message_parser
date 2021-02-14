@@ -1,7 +1,7 @@
 import configparser
 import time
 import sys
-from utils.utils import count_offset, count_replies
+from utils.utils import count_replies
 from telethon.tl.functions.messages import (GetHistoryRequest)
 from telethon import TelegramClient
 
@@ -17,7 +17,7 @@ api_hash = str(api_hash)
 phone = config['Telegram']['phone']
 username = config['Telegram']['username']
 chat_id = config['Telegram']['chat_id']
-offset_per_day = config['Telegram']['offset_per_day']
+offset_per_day = int(config['Telegram']['offset_per_day'])
 
 
 client = TelegramClient(username, api_id, api_hash)
@@ -79,14 +79,7 @@ async def collect_messages(client, my_channel, count_limit):
 
 async def main():
     my_channel = await client.get_entity(chat_id)
-    day = input("Введите день (e.g. 9, 15): ")
-    month = input("Введите месяц (e.g. 5, 12): ")
-    year = input("Введите год: ")
-    offset = count_offset({'day': day,
-                           'month': month,
-                           'year': year}, offset_per_day)
-    print('Offset is - '+str(offset))
-    await collect_messages(client, my_channel, offset)
+    await collect_messages(client, my_channel, offset_per_day)
 
 
 with client:
