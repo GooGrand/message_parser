@@ -1,5 +1,7 @@
 import configparser
-from utils.utils import count_offset, count_replies
+import time
+import sys
+from utils.utils import count_offset, count_replies, generate_message
 from telethon.tl.functions.messages import (GetHistoryRequest)
 from telethon import TelegramClient
 
@@ -44,18 +46,29 @@ async def collect_messages(client, my_channel, count_limit):
             break
         messages = history.messages
         for message in messages:
+
             all_messages.append(message.to_dict())
         offset_id = messages[len(messages) - 1].id
         total_messages = len(all_messages)
         if count_limit != 0 and total_messages >= count_limit:
             break
 
-    result = count_replies(all_messages)
-    sorted_result = sorted(result, key=result.get, reverse=True)
-    with open('most_popular_messages.txt', 'a', encoding='utf8') as outfile:
-        for key in sorted_result[:10]:
-            item = result[key]
-            outfile.writelines('https://t.me/lobsters_chat/'+str(key)+' with result - '+str(item)+'\n')
+    replies, forwards = count_replies(all_messages)
+    replies_sorted = sorted(replies, key=replies.get, reverse=True)
+    forwards_sorted = sorted(forwards, key=forwards.get, reverse=True)
+    message_result = 'Hey! Daily summary has come. Check it out! \n '
+    message_result += await generate_message(replies_sorted, replies, 'replies', message_result)
+    message_result += await generate_message(forwards_sorted, forwards, 'forwards', message_result)
+    print(replies)
+    print(forwards)
+    receiver = await client.get_input_entity('lobster_watcher')
+    try:
+        print("Sending Message... ")
+        await client.send_message(receiver, message_result)
+    except Exception as e:
+        print(e)
+        client.disconnect()
+        sys.exit()
 
 
 async def main():
@@ -68,6 +81,7 @@ async def main():
                            'year': year}, offset_per_day)
     print('Offset is - '+str(offset))
     await collect_messages(client, my_channel, offset)
+    client.disconnect()
 
 
 with client:

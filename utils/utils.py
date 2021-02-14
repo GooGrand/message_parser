@@ -20,10 +20,25 @@ def prepare_date(date):
 
 def count_replies(messages):
     replies = {}
+    forwards = {}
     for message in messages:
         print(message)
         if 'replies' in message and message['replies'] and message['replies']['replies'] > 2:
             id = message['id']
             reply = message['replies']
             replies[id] = reply['replies']
-    return replies
+        if 'forwards' in message and message['forwards']:
+            id = message['id']
+            forwards[id] = message['forwards']
+    return replies, forwards
+
+
+async def generate_message(sorted, main, type, message):
+    if type == 'replies':
+        message += 'Most replied messages: \n'
+    elif type == 'forwards':
+        message += 'Most forwarded messages: \n'
+    for key in sorted[:10]:
+        item = main[key]
+        message += 'https://t.me/lobsters_chat/' + str(key) + ' with result - ' + str(item) + ' ' + str(type) +' \n'
+    return message
